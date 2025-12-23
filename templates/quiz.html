@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>金融商品測驗</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .student-info {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .question {
+            background: white;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            scroll-margin-top: 20px;
+        }
+        .options label {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .options label:hover {
+            background-color: #f8f8f8;
+        }
+        .options input[type="radio"] {
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .logout-btn {
+            background-color: #f44336;
+        }
+        .logout-btn:hover {
+            background-color: #da190b;
+        }
+        .timer-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1001;
+            text-align: center;
+        }
+        .timer-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .timer-display {
+            font-size: 24px;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        .timer-warning {
+            color: #ff9800;
+        }
+        .timer-danger {
+            color: #f44336;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .floating-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            width: calc(100% - 40px);
+            max-width: 300px;
+        }
+        .status-title {
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+            padding-right: 25px;
+        }
+        .unanswered-list {
+            color: #f44336;
+            margin: 0;
+            padding-left: 20px;
+        }
+        .answered-count {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+        .floating-status.all-answered {
+            background-color: #dff0d8;
+        }
+        .floating-status.has-unanswered {
+            background-color: #fff3cd;
+        }
+        .unanswered-list li a {
+            color: #f44336;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .unanswered-list li a:hover {
+            text-decoration: underline;
+            color: #d32f2f;
+        }
+        .answer-feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .correct-answer {
+            background-color: #dff0d8;
+            border: 1px solid #d6e9c6;
+            color: #3c763d;
+        }
+        .wrong-answer {
+            background-color: #f2dede;
+            border: 1px solid #ebccd1;
+            color: #a94442;
+        }
+        .options label.correct-option {
+            background-color: #dff0d8;
+            border: 1px solid #d6e9c6;
+        }
+        .options label.wrong-option {
+            background-color: #f2dede;
+            border: 1px solid #ebccd1;
+        }
+        .floating-status.minimized {
+            max-height: 40px;
+            padding: 8px 15px;
+            width: auto;
+            min-width: 120px;
+        }
+        .status-controls {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: flex;
+            gap: 5px;
+        }
+        .minimize-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 2px 5px;
+            font-size: 18px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+        .minimize-btn:hover {
+            background-color: rgba(0,0,0,0.1);
+        }
+        .minimized .status-content {
+            display: none;
+        }
+        .minimized .status-title {
+            margin: 0;
+            font-size: 14px;
+        }
+        .duration-display {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+            color: #1565c0;
+        }
+        @media screen and (max-width: 768px) {
+            .floating-status {
+                right: 10px;
+                bottom: 10px;
+                left: 10px;
+                width: auto;
+            }
+            .floating-status.minimized {
+                left: auto;
+                width: auto;
+            }
+            .minimize-btn {
+                padding: 8px;
+            }
+            .timer-container {
+                top: 10px;
+                right: 10px;
+                padding: 10px 15px;
+            }
+            .timer-display {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% if has_time_limit %}
+    <div class="timer-container" id="timerContainer">
+        <div class="timer-label">剩餘時間</div>
+        <div class="timer-display" id="timerDisplay">--:--</div>
+    </div>
+    {% endif %}
+
+    <div class="header">
+        <h1>金融商品測驗</h1>
+        <div class="student-info">
+            學號：{{ student_id }}
+            <a href="/logout"><button class="logout-btn">登出</button></a>
+        </div>
+    </div>
+
+    <form id="quizForm">
+        {% for question in questions %}
+        <div class="question" id="question-{{ question['題號'] }}">
+            <p><strong>題目 {{ question['題號'] }}:</strong> {{ question['題目'] }}</p>
+            <div class="options">
+                <label>
+                    <input type="radio" name="{{ question['題號'] }}" value="A" required> A. {{ question['A'] }}
+                </label>
+                <label>
+                    <input type="radio" name="{{ question['題號'] }}" value="B" required> B. {{ question['B'] }}
+                </label>
+                <label>
+                    <input type="radio" name="{{ question['題號'] }}" value="C" required> C. {{ question['C'] }}
+                </label>
+                <label>
+                    <input type="radio" name="{{ question['題號'] }}" value="D" required> D. {{ question['D'] }}
+                </label>
+            </div>
+            <div class="answer-feedback" id="feedback-{{ question['題號'] }}"></div>
+        </div>
+        {% endfor %}
+        <button type="submit" id="submitBtn">提交答案</button>
+    </form>
+
+    <div id="result"></div>
+
+    <div id="floatingStatus" class="floating-status">
+        <div class="status-controls">
+            <button class="minimize-btn" onclick="toggleMinimize()" title="最小化">−</button>
+        </div>
+        <div class="status-title">作答狀態</div>
+        <div class="status-content">
+            <div class="answered-count">已作答: <span id="answeredCount">0</span> / {{ questions|length }}</div>
+            <div id="unansweredStatus">
+                <div style="margin-bottom: 5px;">未作答題號：</div>
+                <ul class="unanswered-list" id="unansweredList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const hasTimeLimit = {{ 'true' if has_time_limit else 'false' }};
+        let remainingSeconds = {{ time_limit_seconds }};
+        let timerInterval = null;
+        let examSubmitted = false;
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+        }
+
+        function updateTimer() {
+            if (!hasTimeLimit) return;
+            const timerDisplay = document.getElementById('timerDisplay');
+            timerDisplay.textContent = formatTime(remainingSeconds);
+            if (remainingSeconds <= 60) {
+                timerDisplay.className = 'timer-display timer-danger';
+            } else if (remainingSeconds <= 300) {
+                timerDisplay.className = 'timer-display timer-warning';
+            }
+            if (remainingSeconds <= 0 && !examSubmitted) {
+                clearInterval(timerInterval);
+                alert('考試時間已到！系統將自動提交您的答案。');
+                autoSubmit();
+            }
+            remainingSeconds--;
+        }
+
+        function autoSubmit() {
+            if (examSubmitted) return;
+            const answers = {};
+            document.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+                answers[input.name] = input.value;
+            });
+            submitAnswers(answers);
+        }
+
+        function submitAnswers(answers) {
+            if (examSubmitted) return;
+            examSubmitted = true;
+            if (timerInterval) clearInterval(timerInterval);
+
+            fetch('/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(answers)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    window.location.href = '/';
+                    return;
+                }
+                const currentStudentId = "{{ student_id }}";
+                localStorage.removeItem('quizAnswers-' + currentStudentId);
+
+                const durationMins = Math.floor(data.duration_seconds / 60);
+                const durationSecs = data.duration_seconds % 60;
+
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'block';
+                resultDiv.style.backgroundColor = data.score >= 60 ? '#dff0d8' : '#f2dede';
+                resultDiv.style.padding = '20px';
+                resultDiv.style.marginTop = '20px';
+                resultDiv.style.borderRadius = '4px';
+
+                const h3 = document.createElement('h3');
+                h3.textContent = '測驗結果';
+                const p1 = document.createElement('p');
+                p1.textContent = '總分：' + data.score.toFixed(1) + ' 分';
+                const p2 = document.createElement('p');
+                p2.textContent = '答對題數：' + data.correct + ' / ' + data.total;
+                const durDiv = document.createElement('div');
+                durDiv.className = 'duration-display';
+                durDiv.textContent = '作答時間：' + durationMins + ' 分 ' + durationSecs + ' 秒';
+
+                resultDiv.appendChild(h3);
+                resultDiv.appendChild(p1);
+                resultDiv.appendChild(p2);
+                resultDiv.appendChild(durDiv);
+
+                const timerContainer = document.getElementById('timerContainer');
+                if (timerContainer) timerContainer.style.display = 'none';
+
+                Object.entries(data.results).forEach(([questionNum, result]) => {
+                    const questionDiv = document.getElementById('question-' + questionNum);
+                    const feedbackDiv = document.getElementById('feedback-' + questionNum);
+
+                    questionDiv.querySelectorAll('label').forEach(label => {
+                        const input = label.querySelector('input');
+                        if (input.value === result.correct_answer) {
+                            label.classList.add('correct-option');
+                        } else if (input.value === result.student_answer && !result.is_correct) {
+                            label.classList.add('wrong-option');
+                        }
+                    });
+
+                    feedbackDiv.style.display = 'block';
+                    feedbackDiv.className = 'answer-feedback ' + (result.is_correct ? 'correct-answer' : 'wrong-answer');
+
+                    const strong = document.createElement('strong');
+                    if (result.student_answer) {
+                        if (result.is_correct) {
+                            strong.textContent = '答對了！';
+                            feedbackDiv.appendChild(strong);
+                            feedbackDiv.appendChild(document.createTextNode(' 正確答案是 ' + result.correct_answer));
+                        } else {
+                            strong.textContent = '答錯了。';
+                            feedbackDiv.appendChild(strong);
+                            feedbackDiv.appendChild(document.createTextNode(' 您的答案是 ' + result.student_answer + '，正確答案是 ' + result.correct_answer));
+                        }
+                    } else {
+                        strong.textContent = '未作答。';
+                        feedbackDiv.appendChild(strong);
+                        feedbackDiv.appendChild(document.createTextNode(' 正確答案是 ' + result.correct_answer));
+                    }
+                });
+
+                document.querySelectorAll('input[type="radio"]').forEach(input => {
+                    input.disabled = true;
+                });
+                document.getElementById('submitBtn').disabled = true;
+                document.getElementById('submitBtn').textContent = '已提交';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                examSubmitted = false;
+                alert('提交答案時發生錯誤，請稍後再試。');
+            });
+        }
+
+        function updateAnswerStatus() {
+            const totalQuestions = {{ questions|length }};
+            const answeredQuestions = new Set();
+            document.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+                answeredQuestions.add(parseInt(input.name));
+            });
+
+            const unansweredQuestions = [];
+            for (let i = 1; i <= totalQuestions; i++) {
+                if (!answeredQuestions.has(i)) {
+                    unansweredQuestions.push(i);
+                }
+            }
+
+            const floatingStatus = document.getElementById('floatingStatus');
+            const answeredCount = document.getElementById('answeredCount');
+            const unansweredList = document.getElementById('unansweredList');
+            const unansweredStatus = document.getElementById('unansweredStatus');
+
+            answeredCount.textContent = answeredQuestions.size;
+
+            if (unansweredQuestions.length === 0) {
+                floatingStatus.className = 'floating-status all-answered' + (isMinimized ? ' minimized' : '');
+                unansweredStatus.style.display = 'none';
+            } else {
+                floatingStatus.className = 'floating-status has-unanswered' + (isMinimized ? ' minimized' : '');
+                unansweredStatus.style.display = 'block';
+                unansweredList.textContent = '';
+                unansweredQuestions.forEach(num => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.textContent = '第 ' + num + ' 題';
+                    a.title = '點擊跳轉到第 ' + num + ' 題';
+                    a.onclick = function() { scrollToQuestion(num); };
+                    li.appendChild(a);
+                    unansweredList.appendChild(li);
+                });
+            }
+        }
+
+        function scrollToQuestion(questionNumber) {
+            const questionElement = document.getElementById('question-' + questionNumber);
+            if (questionElement) {
+                questionElement.scrollIntoView({ behavior: 'smooth' });
+                questionElement.style.backgroundColor = '#fff3cd';
+                setTimeout(() => {
+                    questionElement.style.backgroundColor = 'white';
+                }, 2000);
+            }
+        }
+
+        window.onload = function() {
+            const currentStudentId = "{{ student_id }}";
+            const savedAnswers = localStorage.getItem('quizAnswers-' + currentStudentId);
+            localStorage.setItem('lastStudentId', currentStudentId);
+
+            if (savedAnswers) {
+                try {
+                    const answers = JSON.parse(savedAnswers);
+                    Object.entries(answers).forEach(([questionId, answer]) => {
+                        const input = document.querySelector('input[name="' + questionId + '"][value="' + answer + '"]');
+                        if (input) input.checked = true;
+                    });
+                } catch (e) {
+                    console.error('載入答案時發生錯誤:', e);
+                }
+            }
+            updateAnswerStatus();
+            if (hasTimeLimit) {
+                updateTimer();
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+        };
+
+        function saveAnswers() {
+            const currentStudentId = "{{ student_id }}";
+            const answers = {};
+            document.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+                answers[input.name] = input.value;
+            });
+            localStorage.setItem('quizAnswers-' + currentStudentId, JSON.stringify(answers));
+        }
+
+        document.querySelectorAll('input[type="radio"]').forEach(input => {
+            input.addEventListener('change', () => {
+                saveAnswers();
+                updateAnswerStatus();
+            });
+        });
+
+        window.addEventListener('beforeunload', function(e) {
+            if (!examSubmitted) {
+                const message = '您的考試尚未提交，確定要離開嗎？';
+                e.returnValue = message;
+                return message;
+            }
+        });
+
+        document.getElementById('quizForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (examSubmitted) return;
+            if (!confirm('確定要提交答案嗎？提交後將無法修改。')) return;
+
+            const answers = {};
+            document.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+                answers[input.name] = input.value;
+            });
+
+            const totalQuestions = {{ questions|length }};
+            if (Object.keys(answers).length !== totalQuestions) {
+                if (!confirm('您還有 ' + (totalQuestions - Object.keys(answers).length) + ' 題未作答，確定要提交嗎？')) {
+                    return;
+                }
+            }
+            submitAnswers(answers);
+        });
+
+        let isMinimized = false;
+        function toggleMinimize() {
+            const floatingStatus = document.getElementById('floatingStatus');
+            const minimizeBtn = document.querySelector('.minimize-btn');
+            isMinimized = !isMinimized;
+            if (isMinimized) {
+                floatingStatus.classList.add('minimized');
+                minimizeBtn.textContent = '+';
+                minimizeBtn.title = '展開';
+            } else {
+                floatingStatus.classList.remove('minimized');
+                minimizeBtn.textContent = '−';
+                minimizeBtn.title = '最小化';
+            }
+        }
+    </script>
+</body>
+</html>

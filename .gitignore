@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+
+# Database
+*.db
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Replit
+.replit
+replit.nix
+.breakpoints
+
+# Claude/Serena
+.claude/
+.serena/
+
+# Temp files
+temp_*.csv
+/tmp/
+
+# Poetry lock (optional, can be included if needed)
+# poetry.lock

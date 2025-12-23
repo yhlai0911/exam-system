@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>後台管理系統</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-card.green {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .stat-card.orange {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        .button {
+            padding: 8px 16px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .button:hover {
+            opacity: 0.9;
+        }
+        .button.red {
+            background-color: #f44336;
+        }
+        .button.green {
+            background-color: #4CAF50;
+        }
+        .button.delete {
+            background-color: #dc3545;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .file-upload {
+            margin: 10px 0;
+        }
+        .delete-cell {
+            width: 80px;
+            text-align: center;
+        }
+        .score-high {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .score-low {
+            color: #f44336;
+            font-weight: bold;
+        }
+        .time-limit-info {
+            background-color: #e3f2fd;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            color: #1565c0;
+        }
+        .duration-cell {
+            font-family: monospace;
+        }
+        .actions-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .template-info {
+            background-color: #fff3e0;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            color: #e65100;
+            font-size: 14px;
+        }
+        .time-limit-setting {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        @media screen and (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            table {
+                font-size: 14px;
+            }
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>後台管理系統</h1>
+            <a href="{{ admin_logout_url }}" class="button red">登出管理員</a>
+        </div>
+
+        <div class="section">
+            <h2>考試統計</h2>
+
+            <div class="time-limit-setting">
+                <form action="/admin/settings/time-limit" method="POST" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <label for="time_limit"><strong>考試時限：</strong></label>
+                    <input type="number" id="time_limit" name="time_limit" value="{{ exam_time_limit }}" min="0" style="width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <span>分鐘</span>
+                    <button type="submit" class="button" style="padding: 8px 12px;">更新</button>
+                    <span style="color: #666; font-size: 12px;">（設為 0 表示不限時）</span>
+                </form>
+                <form action="/admin/settings/end-time" method="POST" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <label for="end_time"><strong>結束時間：</strong></label>
+                    <input type="datetime-local" id="end_time" name="end_time" value="{{ exam_end_time }}" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <button type="submit" class="button" style="padding: 8px 12px;">更新</button>
+                    <button type="submit" class="button red" style="padding: 8px 12px;" onclick="document.getElementById('end_time').value='';">清除</button>
+                    <span style="color: #666; font-size: 12px;">（設定後，考試將在此時間自動結束）</span>
+                </form>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.total_students }}</div>
+                    <div class="stat-label">已完成考試人數</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-value">{{ "%.1f"|format(stats.average_score) }}</div>
+                    <div class="stat-label">平均分數</div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-value">{{ "%.1f"|format(stats.pass_rate) }}%</div>
+                    <div class="stat-label">及格率 (60分以上)</div>
+                </div>
+            </div>
+
+            <div class="actions-row">
+                <a href="/admin/download/results" class="button green">下載考試結果 (CSV)</a>
+                <form action="/admin/delete/all-results" method="POST" style="display: inline;" onsubmit="return confirmDeleteAll()">
+                    <button type="submit" class="button red">刪除所有成績</button>
+                </form>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>學號</th>
+                        <th>分數</th>
+                        <th>答對/總題數</th>
+                        <th>作答時間</th>
+                        <th>提交時間</th>
+                        <th>IP位址</th>
+                        <th class="delete-cell">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td>{{ result.student_id }}</td>
+                        <td class="{{ 'score-high' if result.score >= 60 else 'score-low' }}">
+                            {{ "%.1f"|format(result.score) }}
+                        </td>
+                        <td>{{ result.correct_count }} / {{ result.total_questions }}</td>
+                        <td class="duration-cell">
+                            {% if result.exam_duration_seconds %}
+                                {{ (result.exam_duration_seconds // 60) }}分{{ (result.exam_duration_seconds % 60) }}秒
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ result.submission_time }}</td>
+                        <td>{{ result.ip_address }}</td>
+                        <td class="delete-cell">
+                            <form action="/admin/delete/result/{{ result.student_id }}" method="POST" style="display: inline;" onsubmit="return confirmDelete('{{ result.student_id }}')">
+                                <button type="submit" class="button delete">刪除</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not results %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #999;">尚無考試結果</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>題庫管理</h2>
+            <div class="template-info">
+                <strong>格式說明：</strong>CSV 檔案需包含「題目」和「答案」兩欄。題目格式為：題幹(A)選項A(B)選項B(C)選項C(D)選項D
+            </div>
+            <form action="/admin/upload/questions" method="POST" enctype="multipart/form-data">
+                <div class="file-upload">
+                    <label for="questions_file">上傳新題庫 (CSV 格式)：</label>
+                    <input type="file" id="questions_file" name="questions_file" accept=".csv" required>
+                </div>
+                <button type="submit" class="button">上傳題庫</button>
+            </form>
+            <div class="actions-row">
+                <a href="/admin/download/questions" class="button">下載目前題庫</a>
+                <a href="/admin/download/template/questions" class="button" style="background-color: #9c27b0;">下載空白範本</a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>學生名單管理</h2>
+            <div class="template-info">
+                <strong>格式說明：</strong>CSV 檔案需包含「id」欄位，每行一個學號
+            </div>
+            <form action="/admin/upload/students" method="POST" enctype="multipart/form-data">
+                <div class="file-upload">
+                    <label for="students_file">上傳新名單 (CSV 格式)：</label>
+                    <input type="file" id="students_file" name="students_file" accept=".csv" required>
+                </div>
+                <button type="submit" class="button">上傳名單</button>
+            </form>
+            <div class="actions-row">
+                <a href="/admin/download/students" class="button">下載目前名單</a>
+                <a href="/admin/download/template/students" class="button" style="background-color: #9c27b0;">下載空白範本</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmDelete(studentId) {
+            return confirm('確定要刪除學號 ' + studentId + ' 的成績嗎？此操作無法復原。');
+        }
+
+        function confirmDeleteAll() {
+            return confirm('確定要刪除所有成績嗎？此操作無法復原！');
+        }
+    </script>
+</body>
+</html>
