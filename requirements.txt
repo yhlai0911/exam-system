@@ -4,3 +4,5 @@ pandas
 numpy
 PyJWT
 python-multipart
+python-dotenv
+jinja2

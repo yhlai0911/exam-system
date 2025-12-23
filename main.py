@@ -23,6 +23,10 @@ import secrets
 import logging
 import os
 import jwt
+from dotenv import load_dotenv
+
+# 載入 .env 檔案（本地開發用，Zeabur 會自動注入環境變數）
+load_dotenv()
 
 # ============================================================
 # 設定區
@@ -35,9 +39,18 @@ class Config:
     JWT_ALGORITHM = "HS256"
     JWT_EXPIRE_MINUTES = 120  # Token 有效期 2 小時
 
-    # 管理員認證
-    ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
-    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+    # 管理員認證（生產環境必須設定環境變數）
+    ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')  # 本機開發用預設值
+    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')  # 本機開發用預設值
+
+    @classmethod
+    def validate_for_production(cls):
+        """部署前檢查：確保關鍵設定已從環境變數讀取"""
+        if os.environ.get('PRODUCTION') == 'true':
+            if not os.environ.get('ADMIN_PASSWORD'):
+                raise ValueError("生產環境必須設定 ADMIN_PASSWORD 環境變數")
+            if not os.environ.get('JWT_SECRET'):
+                raise ValueError("生產環境必須設定 JWT_SECRET 環境變數")
 
     # 考試設定
     EXAM_TIME_LIMIT_MINUTES = 60  # 考試時限（分鐘），設為 0 表示不限時
@@ -897,5 +910,7 @@ async def delete_all_results_get(_: str = Depends(verify_admin)):
 
 if __name__ == "__main__":
     import uvicorn
-    logger.info("啟動考試系統...")
-    uvicorn.run("main:app", host="0.0.0.0", port=5000, reload=True)
+    Config.validate_for_production()  # 檢查生產環境必要設定
+    port = int(os.environ.get('PORT', 8000))
+    logger.info(f"啟動考試系統... http://localhost:{port}")
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
